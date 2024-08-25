@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    # restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    ports:
+      - 80:80
+      - 443:443
+      # - 443:443/tcp # Uncomment if you want HTTP3
+      # - 443:443/udp # Uncomment if you want HTTP3
+    environment:
+      CF_DNS_API_TOKEN_FILE: /run/secrets/cf_api_token
+      TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
+    secrets:
+      - cf_api_token
+    env_file: .env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/traefik.yml:/traefik.yml:ro
+      - ./data/acme.json:/acme.json
+      # - ./data/config.yml:/config.yml:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`traefik-dashboard.bycontrolia.com`)"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`traefik-dashboard.bycontrolia.com`)"
+      - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main=bycontrolia.com"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.bycontrolia.com"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+
+
+
+  servers:
+    build: .
+    container_name: code-server
+    networks:
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # INSECURE_COOKIE is required if not using a https entrypoint
+      - INSECURE_COOKIE=true
+      - LOG_LEVEL=debug
+      - PASSWORD=1234
+    labels:
+      - "traefik.enable=true"
+
+      ## Routing for codeserver
+      - "traefik.http.routers.app1.rule=Host(`codeserver.bycontrolia.com`)"
+      - "traefik.http.routers.app1.entrypoints=http,https"
+      - "traefik.http.routers.app1.tls=true"
+      - "traefik.http.routers.app1.service=app1s"
+      - "traefik.http.routers.app1.tls.certresolver=cloudflare"
+      - "traefik.http.services.app1s.loadbalancer.server.port=8080"
+
+      - "traefik.http.routers.app1.middlewares=auth-app1"
+      - "traefik.http.middlewares.auth-app1.basicauth.users=user:$$2y$$05$$NkeSaeE2Cxrl2x8of68cdu88WpUIK6ObxXUIcWCXLAI9zfHKGocAC" # generate using: echo $(htpasswd -nB user) | sed -e s/\\$/\\$\\$/g
+
+
+secrets:
+  cf_api_token:
+    file: ./cf_api_token.txt
+
+networks:
+  proxy:
+    external: true

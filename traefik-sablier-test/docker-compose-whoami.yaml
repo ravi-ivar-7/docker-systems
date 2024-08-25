@@ -1,0 +1,28 @@
+# docker-compose-whoami.yaml
+
+
+version: "3"
+
+services:
+  whoami:
+    container_name: whoami
+    image: traefik/whoami
+    networks:
+      - traefik
+
+  whoami-nginx:
+    container_name: nginx
+    image: traefik/whoami
+    networks:
+      - traefik
+
+  whoami-mariadb:
+    container_name: mariadb
+    image: traefik/whoami
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    name: traefik
+    external: true

@@ -1,0 +1,64 @@
+cAdvisor (Container Advisor) provides container metrics and is typically used to monitor Docker containers.
+
+docker run -d \
+  --name cadvisor \
+  -p 8080:8080 \
+  --volume=/:/rootfs:ro \
+  --volume=/var/run:/var/run:ro \
+  --volume=/sys:/sys:ro \
+  --volume=/var/lib/docker/:/var/lib/docker:ro \
+  google/cadvisor:latest
+
+Access http://localhost:8080/metrics in your browser to see the metrics exposed by cAdvisor.
+
+node_exporter collects hardware and OS metrics from the host machine, including CPU, memory, and disk usage.
+
+docker run -d \
+  --name node_exporter \
+  -p 9100:9100 \
+  prom/node-exporter:latest
+
+  Access http://localhost:9100/metrics in your browser to see the metrics exposed by node_exporter.
+
+
+
+  Add the cAdvisor and node_exporter targets to your prometheus.yml file.
+Example Configuration:
+
+yaml
+Copy code
+scrape_configs:
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['localhost:8080']
+
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+
+
+starting promethus container:
+docker run -d \
+  --name prometheus \
+  -p 9090:9090 \
+  -v /path/to/prometheus.yml:/etc/prometheus/prometheus.yml \
+  -v /path/to/alert.rules.yml:/etc/prometheus/alert.rules.yml \
+  prom/prometheus:latest
+
+
+      restast ater all congi:
+      docker restart prometheus
+
+
+
+      copy config and alert files prometues:
+      docker cp prometheus.yml prometheus:/etc/prometheus/prometheus.yml
+docker cp alert.rules.yml prometheus:/etc/prometheus/alert.rules.yml
+
+
+docker run -d \
+  --name prometheus \
+  -p 9090:9090 \
+  -v ./prometheus.yml:/etc/prometheus/prometheus.yml \
+  -v ./alert.rules.yml:/etc/prometheus/alert.rules.yml \
+  prom/prometheus:latest

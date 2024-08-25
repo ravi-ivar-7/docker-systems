@@ -1,0 +1,22 @@
+groups:
+  - name: container_alerts
+    rules:
+      - alert: HighCpuUsage
+        expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (container_name) > 0.01
+        for: 1m
+        labels:
+          severity: 'critical'
+        annotations:
+          summary: 'High CPU usage detected for container {{ $labels.container_name }}'
+          description: 'CPU usage is {{ $value }}'
+
+  - name: test_alerts
+    rules:
+      - alert: AlwaysTrigger
+        expr: 1 == 1
+        for: 1m
+        labels:
+          severity: 'critical'
+        annotations:
+          summary: 'This is a test alert that should always trigger.'
+# update rules by: docker cp alert.rules.yml prometheus:/etc/prometheus/alert.rules.yml

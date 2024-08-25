@@ -1,0 +1,25 @@
+http:
+  middlewares:
+    dynamic:
+      plugin:
+        sablier:
+          names: servers
+          sablierUrl: http://sablier:10000
+          sessionDuration: 1m
+          dynamic:
+            theme: hacker-terminal
+
+  routers:
+    servers:
+      rule: Host(`app.bycontrolia.com`)
+      entryPoints:
+        - "http"
+      middlewares:
+        - dynamic@docker
+      service: servers
+
+  services:
+    servers:
+      loadBalancer:
+        servers:
+        - url: "http://servers:5000"

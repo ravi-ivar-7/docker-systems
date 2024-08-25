@@ -1,0 +1,32 @@
+# traefik/traefik.yaml
+
+# https://doc.traefik.io/traefik/operations/api/
+api:
+  dashboard: true
+
+# https://doc.traefik.io/traefik/providers/docker/
+providers:
+  docker:
+    exposedByDefault: false
+    network: traefik
+  file:
+    directory: "/etc/traefik/dynamic_config"
+    watch: true
+
+# https://doc.traefik.io/traefik/routing/entrypoints/
+entryPoints:
+  web:
+    address: :80
+
+experimental:
+  plugins:
+    sablier:
+      moduleName: "github.com/acouvreur/sablier"
+      version: "v1.3.0"
+
+log:
+  filePath: /etc/traefik/log/traefik.log
+  level: INFO
+
+accessLog:
+  filePath: /etc/traefik/log/access.log

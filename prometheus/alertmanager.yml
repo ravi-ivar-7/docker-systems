@@ -1,0 +1,15 @@
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'          # Replace with your SMTP server details
+  smtp_from: 'ravikumar117211@gmail.com'          # Your sender email
+  smtp_auth_username: 'ravikumar117211@gmail.com' # Your SMTP username
+  smtp_auth_password: 'qgwi xdrv lkcy abge'       # Your SMTP password
+
+route:
+  receiver: 'email'
+
+receivers:
+  - name: 'email'
+    email_configs:
+      - to: 'ravi404606@gmail.com'   # Recipient email
+        send_resolved: true           # Include resolved alerts in notifications
+

@@ -1,0 +1,25 @@
+# traefik/dynamic_config/whoami.yaml
+
+http:
+  services:
+    whoami-service:
+      loadBalancer:
+        servers:
+          - url: http://whoami:80
+
+  routers:
+    whoami-dynamic-router:
+      rule: "Host(`whoami-dynamic.bycontrolia.com`)"
+      service: whoami-service
+      entryPoints:
+        - web
+      middlewares:
+        - sablier-dynamic@file
+
+    whoami-blocking-router:
+      rule: "Host(`whoami-blocking.bycontrolia.com`)"
+      service: whoami-service
+      entryPoints:
+        - web
+      middlewares:
+        - sablier-blocking@file

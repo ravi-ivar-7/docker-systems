@@ -1,0 +1,51 @@
+version: '3'
+services:
+  traefik:
+    image: traefik:v2.5
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    environment:
+      - EMAIL=ravikumar117211@gmail.com
+    command:
+      - "--api.insecure=true"
+      - "--log.level=DEBUG"
+      - "--providers.docker=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.swarmMode=false"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=traefik-public"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.https.address=:443"
+      - "--certificatesresolvers.certbot.acme.httpchallenge=true"
+      - "--certificatesresolvers.certbot.acme.httpchallenge.entrypoint=http"
+      - "--certificatesresolvers.certbot.acme.email=${EMAIL}"
+      - "--certificatesresolvers.certbot.acme.storage=/certs/acme-v2.json"
+      - "--certificatesresolvers.certbot.acme.caserver=https://acme-v02.api.letsencrypt.org/directory"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - certs:/certs
+    networks:
+      - traefik-public
+
+  code-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.docker.network=traefik-public"
+      - "traefik.enable=true"
+      - "traefik.http.services.code-server.loadbalancer.server.port=8443"
+      - "traefik.http.routers.code-server.rule=Host(`controlia.shop`)"
+      - "traefik.http.routers.code-server.entrypoints=http,https"
+      - "traefik.http.routers.code-server.tls.certresolver=certbot"
+    networks:
+      - traefik-public
+
+volumes:
+  certs:
+
+networks:
+  traefik-public:
+    external: true

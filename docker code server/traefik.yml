@@ -1,0 +1,21 @@
+http:
+  routers:
+    api:
+      entryPoints:
+        - web
+      rule: "Host(`localhost`)"
+      service: api@internal
+      middlewares:
+        - auth
+
+  middlewares:
+    auth:
+      basicAuth:
+        users:
+          - "admin:$2y$05$MuwgLy8/hYi7aIHIWf0BoeXo6UrPnz9gAWRSNjfwv.8d2xFSJQfKS"  # Replace with your generated hash
+
+  services:
+    api:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:8080"
